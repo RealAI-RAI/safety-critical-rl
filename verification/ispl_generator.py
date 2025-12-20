@@ -1,0 +1,157 @@
+# verification/ispl_generator.py
+# Policy-driven ISPL generator:
+# - sample states from policy rollouts
+# - cluster representative states with KMeans
+# - fit a DecisionTreeClassifier mapping states -> actions
+# - extract tree rules and produce ISPL rules
+# Requires: scikit-learn (pip install scikit-learn)
+
+import torch
+import numpy as np
+from typing import List, Optional, Dict
+from sklearn.cluster import KMeans
+from sklearn.tree import DecisionTreeClassifier, _tree
+from pathlib import Path
+import time
+
+class PolicyToISPLConverter:
+    """Convert trained policy to compact ISPL model using policy-driven sampling and decision-tree rule extraction"""
+
+    def __init__(self, policy, env, state_discretization=10, device=None):
+        """
+        policy: callable mapping state_tensor -> action probabilities (model.forward)
+        env: environment instance exposing reset() and step()
+        state_discretization: not used directly here but kept for signature
+        """
+        self.policy = policy
+        self.env = env
+        self.device = device or torch.device("cpu")
+
+    def sample_states(self, n_rollouts=100, rollout_len=100):
+        """Collect states by running policy in env (stochastic sampling)"""
+        states = []
+        actions = []
+        for _ in range(n_rollouts):
+            s, _ = self.env.reset()
+            for _ in range(rollout_len):
+                st = torch.FloatTensor(s).unsqueeze(0).to(self.device)
+                with torch.no_grad():
+                    probs = self.policy(st).cpu().numpy().squeeze(0)
+                a = int(np.argmax(probs))
+                states.append(s.copy())
+                actions.append(a)
+                s, _, done, truncated, _ = self.env.step(a)
+                if done or truncated:
+                    break
+        return np.array(states), np.array(actions)
+
+    def compress_states(self, states: np.ndarray, n_clusters: int = 200):
+        """Use KMeans to find representative states"""
+        if len(states) == 0:
+            return np.zeros((0, states.shape[1]))
+        k = min(n_clusters, len(states))
+        kmeans = KMeans(n_clusters=k, random_state=0)
+        kmeans.fit(states)
+        centers = kmeans.cluster_centers_
+        return centers
+
+    def fit_decision_tree(self, states: np.ndarray, actions: np.ndarray, max_depth: int = 6):
+        """Train a decision tree to map states -> actions"""
+        clf = DecisionTreeClassifier(max_depth=max_depth, random_state=0)
+        clf.fit(states, actions)
+        return clf
+
+    def tree_to_rules(self, clf: DecisionTreeClassifier, feature_names: Optional[List[str]] = None):
+        """Extract human-readable rules from decision tree"""
+        tree = clf.tree_
+        if feature_names is None:
+            feature_names = [f'f{i}' for i in range(tree.n_features)]
+        rules = []
+
+        def recurse(node, depth, conditions):
+            if tree.feature[node] != _tree.TREE_UNDEFINED:
+                name = feature_names[tree.feature[node]]
+                threshold = tree.threshold[node]
+                left_cond = conditions + [f"({name} <= {threshold:.4f})"]
+                recurse(tree.children_left[node], depth+1, left_cond)
+                right_cond = conditions + [f"({name} > {threshold:.4f})"]
+                recurse(tree.children_right[node], depth+1, right_cond)
+            else:
+                # leaf
+                vals = tree.value[node][0]
+                action = int(np.argmax(vals))
+                rule = (" and ".join(conditions)) if conditions else "True"
+                rules.append((rule, action))
+        recurse(0, 1, [])
+        return rules
+
+    def convert(self, n_rollouts=200, rollout_len=200, n_clusters=500, tree_depth=6, action_names=None, output_path: Optional[str] = None):
+        """
+        Main conversion pipeline. Returns ispl_text and statistics dict:
+        'n_sampled_states', 'n_clusters', 'n_rules'
+        """
+        t0 = time.time()
+        states, actions = self.sample_states(n_rollouts=n_rollouts, rollout_len=rollout_len)
+        sampled_count = len(states)
+        if sampled_count == 0:
+            raise RuntimeError("No states sampled from policy")
+
+        centers = self.compress_states(states, n_clusters=n_clusters)
+        # assign labels to centers using policy
+        center_actions = []
+        with torch.no_grad():
+            for c in centers:
+                st = torch.FloatTensor(c).unsqueeze(0).to(self.device)
+                probs = self.policy(st).cpu().numpy().squeeze(0)
+                center_actions.append(int(np.argmax(probs)))
+        center_actions = np.array(center_actions)
+
+        # fit decision tree on centers
+        clf = self.fit_decision_tree(centers, center_actions, max_depth=tree_depth)
+        rules = self.tree_to_rules(clf, feature_names=[f's{i}' for i in range(centers.shape[1])])
+
+        # build ISPL: header, agents, evolution rules (from rules)
+        lines = []
+        lines.append("// ISPL generated by policy-driven converter")
+        lines.append("System: RailwayTMA;")
+        lines.append("")
+        # simple Agents placeholder
+        lines.append("Agent TrainController {")
+        lines.append("  Vars: action : {Grant_MA, Deny_MA, Request_Update, Reduce_Speed};")
+        lines.append("}")
+        lines.append("")
+        lines.append("Agent Environment {")
+        # include simplified observables
+        for i in range(centers.shape[1]):
+            lines.append(f"  Vars: s{i} : real;")
+        lines.append("}")
+        lines.append("")
+
+        lines.append("Evolution:")
+        # convert each rule into a case clause (approximate)
+        for idx, (cond, action) in enumerate(rules):
+            action_str = action_names[action] if action_names else str(action)
+            # keep rule as comment + default guard mapping
+            lines.append(f"  // Rule {idx}: if {cond} -> Action {action_str}")
+        lines.append("")
+
+        # Credibility formulas placeholders (user can adapt)
+        lines.append("// Credibility CTL formulas")
+        lines.append("Adequacy: AG (!(TrainController.action = Grant_MA) | (Environment.s2 & Environment.s3));")
+        elapsed = time.time() - t0
+
+        ispl_text = "\n".join(lines)
+        stats = {
+            'n_sampled_states': sampled_count,
+            'n_clusters': centers.shape[0],
+            'n_rules': len(rules),
+            'conversion_time_sec': elapsed
+        }
+
+        if output_path:
+            p = Path(output_path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            with open(p, 'w') as f:
+                f.write(ispl_text)
+
+        return ispl_text, stats

@@ -1,0 +1,7 @@
+episode,total_steps,episode_reward,episode_length,interventions,violations_adequacy,violations_consistency,violations_stability,violations_timeliness,lagrange_0,lagrange_1,lagrange_2,lagrange_3
+1,302,-537.6999999999998,302,23,0,0,0,0,0.0,0.0,0.0,0.0
+2,604,-560.5,302,20,0,0,0,0,0.0,0.0,0.0,0.0
+3,906,-550.6999999999998,302,8,0,0,0,0,0.0,0.0,0.0,0.0
+4,1208,-3624.0,302,302,0,302,0,0,0.0,0.0,0.0,0.0
+5,1510,78.49999999999991,302,18,0,0,0,0,0.0,0.0,0.0,0.0
+6,1812,-3624.0,302,302,0,302,0,0,0.0,0.0,0.0,0.0

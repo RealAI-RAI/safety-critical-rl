@@ -1,0 +1,31 @@
+# configs/viz_config.yaml
+visualization:
+  # Which experiment to visualize
+  experiment_dir: "runs/safe_rl_tma_20251213_023355"  # or "auto" for latest
+  
+  # What to visualize
+  show_training_curves: true
+  show_summary_stats: true
+  show_policy_analysis: true
+  show_safety_metrics: true
+  
+  # Plot settings
+  plot_style: "darkgrid"
+  color_palette: "husl"
+  figure_size: [12, 8]
+  
+  # Output settings
+  save_formats: ["png", "html"]  # png, html, pdf
+  output_dir: "visualizations/"
+  
+  # Analysis depth
+  num_samples_policy_analysis: 1000
+  smoothing_window: 10
+  
+  # Export options
+  export_csv: true
+  export_json: true
+  
+  # Dashboard options
+  create_dashboard: true
+  dashboard_port: 8501

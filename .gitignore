@@ -1,0 +1,36 @@
+
+cat > .gitignore << 'EOF'
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+.vscode/
+
+# Training outputs
+runs/
+*.pt
+*.pth
+checkpoints/
+models/
+
+# Logs and data
+*.log
+*.csv
+*.h5
+*.pkl
+*.npy
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

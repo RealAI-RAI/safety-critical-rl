@@ -1,0 +1,42 @@
+{
+  "environment": {
+    "sensor_accuracy": 0.95,
+    "sensor_failure_rate": 0.01,
+    "weather_effects": true,
+    "consistency_threshold": 0.3,
+    "timeliness_limit": 5
+  },
+  "agent": {
+    "lr": 0.013,
+    "clip_epsilon": 0.2,
+    "entropy_coef": 0.01,
+    "value_coef": 0.5,
+    "max_grad_norm": 0.5,
+    "lagrange_lr": 0.01,
+    "constraint_thresholds": [
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ]
+  },
+  "training": {
+    "buffer_size": 500000,
+    "gamma": 0.99,
+    "lam": 0.95,
+    "total_steps": 10000
+  },
+  "logging": {
+    "log_interval": 50,
+    "use_wandb": false
+  },
+  "checkpoint": {
+    "save_interval": 10
+  },
+  "shield": {
+    "adequacy_threshold": 0.8,
+    "consistency_threshold": 0.7,
+    "stability_window": 5,
+    "timeliness_limit": 10
+  }
+}

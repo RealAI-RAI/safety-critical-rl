@@ -1,0 +1,59 @@
+# configs/train_config.yaml (recommended defaults)
+environment:
+  env_type: default
+  sensor_accuracy: 0.95
+  sensor_failure_rate: 0.0    # curriculum will raise this later
+  weather_effects: false
+  consistency_threshold: 0.3
+  timeliness_limit: 5
+  sensor_fail_sentinel: -1.0
+  violation_penalty: 2.0
+
+agent:
+  lr: 0.0003
+  clip_epsilon: 0.2
+  entropy_coef: 0.01
+  value_coef: 0.5
+  max_grad_norm: 0.5
+  lagrange_lr: 1e-4
+  lagrange_max: 20.0
+  constraint_thresholds: [0.1, 0.1, 0.1, 0.1]
+  imitation_coef: 0.5
+
+training:
+  buffer_size: 4096
+  ppo_epochs: 8
+  minibatch_size: 64
+  gamma: 0.99
+  lam: 0.95
+  total_steps: 400000
+  intervention_penalty: -2.0
+  penalize_intervention: true
+  lagrange_smooth_alpha: 0.02
+  lagrange_max: 20.0
+  curriculum:
+    - step: 0
+      env_overrides:
+        sensor_failure_rate: 0.0
+        weather_effects: false
+    - step: 100000
+      env_overrides:
+        sensor_failure_rate: 0.002
+        weather_effects: true
+    - step: 250000
+      env_overrides:
+        sensor_failure_rate: 0.005
+
+logging:
+  log_interval: 100
+  use_wandb: false
+
+checkpoint:
+  save_interval: 50
+
+shield:
+  adequacy_threshold: 0.8
+  consistency_threshold: 0.7
+  stability_window: 5
+  timeliness_limit: 10
+  sensor_fail_sentinel: -1.0
