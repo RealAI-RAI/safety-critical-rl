@@ -60,7 +60,7 @@ Final **Lagrangian multipliers (λ)** represent the minimum enforcement pressure
 ## 🛠️ Installation
 
 ### 1️⃣ Clone the Repository
-git clone https://github.com/your-username/CGSRL-Railway.git
+git clone https://github.com/RealAI-RAI/safety-critical-rl.git
 cd CGSRL-Railway
 
 ### 2️⃣ Install Dependencies
