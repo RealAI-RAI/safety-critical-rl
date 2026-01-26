@@ -57,7 +57,7 @@ Final **Lagrangian multipliers (λ)** represent the minimum enforcement pressure
 └── runs/               # Model checkpoints and exported configs
 ```
 
-### 🛠️ Installation
+## 🛠️ Installation
 
 ### 1️⃣ Clone the Repository
 git clone https://github.com/your-username/CGSRL-Railway.git
@@ -67,11 +67,11 @@ cd CGSRL-Railway
 
 pip install -r requirements.txt
 
-## 3️⃣ Verify the Environment
+### 3️⃣ Verify the Environment
 
 python scripts/diagnose_training_csv.py
 
-# 📈 Usage
+## 📈 Usage
 🚀 Training the Agent
 
 Run a long-horizon training session (1.2M+ steps) using the enhanced railway environment:
@@ -92,13 +92,13 @@ python scripts/dashboard.py --run_dir runs/Long_Train
 
 CGSRL provides two complementary layers of safety protection:
 
-# 1️⃣ Training-Time Shield
+### 1️⃣ Training-Time Shield
 
 Prevents exploration of unsafe states
 
 Enforces kinematic safety corridors in real time
 
-## 2️⃣ Post-Hoc Formal Verification
+### 2️⃣ Post-Hoc Formal Verification
 
 Extracted decision-tree policy verified using MCMAS
 
