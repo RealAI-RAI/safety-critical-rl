@@ -46,7 +46,6 @@ Final **Lagrangian multipliers (λ)** represent the minimum enforcement pressure
 
 > Exact numerical values are available in the `results/` directory.
 
-
 ## 📂 Project Structure
 
 ```plaintext
@@ -56,14 +55,15 @@ Final **Lagrangian multipliers (λ)** represent the minimum enforcement pressure
 ├── scripts/            # Training, evaluation, and dashboards
 ├── results/            # CSV logs and performance metrics
 └── runs/               # Model checkpoints and exported configs
+```
 
-# 🛠️ Installation
+### 🛠️ Installation
 
-## 1️⃣ Clone the Repository
+### 1️⃣ Clone the Repository
 git clone https://github.com/your-username/CGSRL-Railway.git
 cd CGSRL-Railway
 
-## 2️⃣ Install Dependencies
+### 2️⃣ Install Dependencies
 
 pip install -r requirements.txt
 
@@ -78,17 +78,17 @@ Run a long-horizon training session (1.2M+ steps) using the enhanced railway env
 
 python scripts/train.py --config configs/train_config.yaml --name Long_Train
 
-# 🔍 Safety Verification
+## 🔍 Safety Verification
 
 Generate ISPL code for formal verification of the trained policy:
 python verification/ispl_generator.py --model runs/Long_Train/final_model.pt
 
-# 📊 Visualizing Results
+## 📊 Visualizing Results
 
 Launch the interactive dashboard to inspect rewards, constraints, and shield interventions:
 python scripts/dashboard.py --run_dir runs/Long_Train
 
-# 🛡️ Safety Guarantees
+## 🛡️ Safety Guarantees
 
 CGSRL provides two complementary layers of safety protection:
 
@@ -98,10 +98,15 @@ Prevents exploration of unsafe states
 
 Enforces kinematic safety corridors in real time
 
-# 2️⃣ Post-Hoc Formal Verification
+## 2️⃣ Post-Hoc Formal Verification
 
 Extracted decision-tree policy verified using MCMAS
 
 Exhaustive checking over 15.8 million states
 
 100% compliance with all CTL safety properties
+
+## 📬Contact
+
+For questions, collaborations, or discussions on safety-critical reinforcement learning,
+Please open an issue or contact the authors.
